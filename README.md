@@ -50,7 +50,7 @@ By default, the services are mapped as follows:
 - Dashboard UI: http://localhost:5173
 - API Gateway: http://localhost:9010
 
-[!TIP]To access this dashboard from another device on the same Wi-Fi, replace localhost with your phone's internal IP (found via ifconfig in Termux).
+[!TIP] To access this dashboard from another device on the same Wi-Fi, replace localhost with your phone's internal IP (found via ifconfig in Termux).
 
 ## ⚠️ Requirements & Troubleshooting
 
