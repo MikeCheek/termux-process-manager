@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { DashboardData } from './types';
 import NewConfigForm from './components/NewConfigForm';
 import PM2Section from './components/PM2Section';
 import SavedConfigs from './components/SavedConfigs';
+import NetworkView from './components/NetworkView';
+import ConsoleView from './components/ConsoleView';
+import { io, Socket } from 'socket.io-client';
 
 const API_URL = "http://192.168.1.39:9010"
 
@@ -12,6 +15,25 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string, type: 'success' | 'error' } | null>(null);
+  const [lastMessage, setLastMessage] = useState<string>("");
+  const socketRef = useRef<Socket | null>(null);
+
+  useEffect(() => {
+    // Connect to your NestJS backend
+    socketRef.current = io(API_URL);
+
+    socketRef.current.on('connect', () => console.log("Connected to Terminal Stream"));
+
+    // Listen for the live output from your spawn command
+    socketRef.current.on('cmd-output', (chunk: string) => {
+      // Update the state that flows into ConsoleView
+      setLastMessage(chunk);
+    });
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, []);
 
   const showToast = useCallback((msg: string, type: 'success' | 'error') => {
     setToast({ msg, type });
@@ -144,7 +166,7 @@ const App: React.FC = () => {
               <span className="text-pink-400">📋</span> Saved Configurations
             </h3>
           </div>
-          <SavedConfigs commands={data.commands || {}} searchQuery={search} />
+          <SavedConfigs commands={data.commands || {}} searchQuery={search} socket={socketRef.current} />
         </section>
 
         {/* New Configuration */}
@@ -159,20 +181,10 @@ const App: React.FC = () => {
         <div className="sticky bottom-0 z-30 pt-4 pb-8 bg-gh-bg/95 backdrop-blur-sm border-t border-gh-border">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Console */}
-            <div className="md:col-span-2 bg-gh-card border border-gh-border rounded-md p-4 shadow-xl">
-              <h3 className="text-xs font-semibold mb-3 text-gh-dim uppercase tracking-wider">Console Output</h3>
-              <div className="bg-black rounded-md p-4 h-48 overflow-y-auto font-mono text-xs text-green-400 custom-scrollbar border border-white/5">
-                {data.last_out || "Welcome back, Commander."}
-              </div>
-            </div>
+            <ConsoleView lastOut={lastMessage} />
 
             {/* Network */}
-            <div className="bg-gh-card border border-gh-border rounded-md p-4 shadow-xl">
-              <h3 className="text-xs font-semibold mb-3 text-gh-dim uppercase tracking-wider">🌐 Network Ports</h3>
-              <div className="bg-gh-inner border border-gh-border rounded-md p-3 h-48 overflow-y-auto font-mono text-[11px] text-amber-400 custom-scrollbar leading-relaxed">
-                {data.port_info || "No network data available"}
-              </div>
-            </div>
+            <NetworkView portInfo={data.port_info} />
           </div>
         </div>
       </main>

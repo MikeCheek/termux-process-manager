@@ -15,8 +15,9 @@ const NetworkView: React.FC<Props> = ({ portInfo }) => {
             }
         >
             <div className="bg-gh-inner border border-gh-border rounded-md p-4 h-48 overflow-y-auto custom-scrollbar">
-                <pre className="m-0 text-amber-400 font-mono text-[11px] leading-relaxed whitespace-pre-wrap">
-                    {portInfo || "Scanning network..."}
+                <pre className="m-0 text-amber-400 font-mono text-[11px] leading-relaxed whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{ __html: portInfo || "Scanning network..." }}
+                >
                 </pre>
             </div>
         </SectionWrap>

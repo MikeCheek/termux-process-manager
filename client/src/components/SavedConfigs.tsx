@@ -1,12 +1,14 @@
 import React, { useMemo } from 'react';
 import type { CommandConfig } from '../types';
+import type { Socket } from 'socket.io-client';
 
 interface Props {
     commands: Record<string, CommandConfig>;
     searchQuery: string;
+    socket: Socket | null; // Add your socket instance here
 }
 
-const SavedConfigs: React.FC<Props> = ({ commands, searchQuery }) => {
+const SavedConfigs: React.FC<Props> = ({ commands, searchQuery, socket }) => {
     const filteredCids = useMemo(() => {
         return Object.keys(commands).filter((cid) => {
             const { name, cmd, desc } = commands[cid];
@@ -19,15 +21,41 @@ const SavedConfigs: React.FC<Props> = ({ commands, searchQuery }) => {
         });
     }, [commands, searchQuery]);
 
+    // const handleActionOld = async (cid: string, action: 'run' | 'delete') => {
+    //     const endpoint = `/api/${action}/${cid}`;
+    //     try {
+    //         const response = await fetch(endpoint, { method: 'POST' });
+    //         if (response.ok) {
+    //             window.location.reload();
+    //         }
+    //     } catch (err) {
+    //         console.error(`Failed to ${action}:`, err);
+    //     }
+    // };
+
     const handleAction = async (cid: string, action: 'run' | 'delete') => {
-        const endpoint = `/api/${action}/${cid}`;
-        try {
-            const response = await fetch(endpoint, { method: 'POST' });
-            if (response.ok) {
-                window.location.reload();
+        if (!socket) {
+            console.error("No socket available")
+            return
+        }
+        if (action === 'run') {
+            // LIVE STREAMING ACTION
+            // Trigger the socket event we created in NestJS TerminalGateway
+            socket.emit('run-live', { cid });
+
+            // Do NOT reload the page! 
+            // The output will start appearing in your ConsoleView automatically.
+        } else {
+            // STANDARD API ACTION (Delete)
+            const endpoint = `/api/${action}/${cid}`;
+            try {
+                const response = await fetch(endpoint, { method: 'POST' });
+                if (response.ok) {
+                    window.location.reload(); // Reload is fine for deletion
+                }
+            } catch (err) {
+                console.error(`Failed to delete:`, err);
             }
-        } catch (err) {
-            console.error(`Failed to ${action}:`, err);
         }
     };
 
@@ -60,9 +88,9 @@ const SavedConfigs: React.FC<Props> = ({ commands, searchQuery }) => {
                     <div className="flex flex-col items-end gap-2 ml-4">
                         <button
                             onClick={() => handleAction(cid, 'run')}
-                            className="bg-gh-success/10 text-gh-success border border-gh-success/20 hover:bg-gh-success hover:text-white px-3 py-1 rounded text-xs font-bold transition-all"
+                            className="bg-gh-success/10 text-gh-success border border-gh-success/20 hover:bg-gh-success hover:text-white px-3 py-1 rounded text-xs font-bold transition-all active:scale-95"
                         >
-                            Run
+                            Run Live
                         </button>
                         <button
                             onClick={() => handleAction(cid, 'delete')}

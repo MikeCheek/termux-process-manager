@@ -3,6 +3,7 @@ import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as net from 'net';
 import { CommandConfig, PM2Process } from './interfaces';
+import { spawn } from 'child_process';
 
 @Injectable()
 export class DashboardService {
@@ -94,5 +95,22 @@ export class DashboardService {
         try {
             return execSync(cmd).toString();
         } catch (e: any) { return e.message; }
+    }
+
+    executeLive(cmd: string, socket: any) {
+        const child = spawn(cmd, { shell: true });
+
+        child.stdout.on('data', (data) => {
+            // Send each chunk of data to the frontend immediately
+            socket.emit('cmd-output', data.toString());
+        });
+
+        child.stderr.on('data', (data) => {
+            socket.emit('cmd-output', `Error: ${data.toString()}`);
+        });
+
+        child.on('close', (code) => {
+            socket.emit('cmd-output', `\nProcess finished with code ${code}`);
+        });
     }
 }
