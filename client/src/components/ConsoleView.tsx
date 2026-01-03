@@ -1,5 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import SectionWrap from './SectionWrap';
+import Convert from 'ansi-to-html';
+
+const convert = new Convert();
 
 interface Props {
     lastOut: string; // This should be the latest chunk from the backend
@@ -15,6 +18,9 @@ const ConsoleView: React.FC<Props> = ({ lastOut }) => {
         if (lastOut) {
             // Convert newlines from terminal to HTML breaks
             const formatted = lastOut.replace(/\n/g, '<br />');
+            const html = convert.toHtml(formatted);
+            setLogHistory(prev => prev + html);
+
             setLogHistory((prev) => prev + formatted);
         }
     }, [lastOut]);
@@ -66,10 +72,10 @@ const ConsoleView: React.FC<Props> = ({ lastOut }) => {
                 className="bg-black rounded-md p-4 h-64 overflow-y-auto font-mono text-xs text-green-400 custom-scrollbar scroll-smooth border border-gh-border"
             >
                 {/* 3. Use dangerouslySetInnerHTML to render the streamed HTML breaks */}
-                <code 
-                    dangerouslySetInnerHTML={{ 
-                        __html: logHistory || "> System idle. Awaiting command..." 
-                    }} 
+                <code
+                    dangerouslySetInnerHTML={{
+                        __html: logHistory || "> System idle. Awaiting command..."
+                    }}
                 />
             </pre>
         </SectionWrap>

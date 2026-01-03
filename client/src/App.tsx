@@ -30,6 +30,10 @@ const App: React.FC = () => {
       setLastMessage(chunk);
     });
 
+    socketRef.current.on('refresh-data', () => {
+      refreshData();
+    });
+
     return () => {
       socketRef.current?.disconnect();
     };
@@ -156,7 +160,7 @@ const App: React.FC = () => {
               {data.pm2_procs?.length || 0} Active
             </span>
           </div>
-          <PM2Section processes={data.pm2_procs || []} searchQuery={search} />
+          <PM2Section processes={data.pm2_procs || []} searchQuery={search} socket={socketRef.current} portsInfo={data.ports_info} />
         </section>
 
         {/* Saved Configurations */}
@@ -184,7 +188,7 @@ const App: React.FC = () => {
             <ConsoleView lastOut={lastMessage} />
 
             {/* Network */}
-            <NetworkView portInfo={data.port_info} />
+            <NetworkView portsInfo={data.ports_info} />
           </div>
         </div>
       </main>

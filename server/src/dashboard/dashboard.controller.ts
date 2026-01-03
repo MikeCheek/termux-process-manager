@@ -10,7 +10,7 @@ export class DashboardController {
         return {
             commands: this.dashboardService.loadDb(),
             pm2_procs: this.dashboardService.getPm2Data(),
-            port_info: await this.dashboardService.getPortMapping(),
+            ports_info: await this.dashboardService.getPortMapping(),
             last_out: lastOut || 'System Ready.',
         };
     }

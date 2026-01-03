@@ -20,5 +20,13 @@ export interface DashboardData {
     pm2_procs: PM2Process[];
     commands: Record<string, CommandConfig>;
     last_out: string;
-    port_info: string;
+    ports_info: {
+        port: number,
+        pm2Name: string,
+        name: string,
+        icon: string,
+        isOpen: boolean,
+        isPM2Live: boolean,
+        url: string
+    }[];
 }

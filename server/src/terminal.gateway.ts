@@ -39,4 +39,22 @@ export class TerminalGateway {
             client.emit('cmd-output', `\n> Process exited with code ${code}\n`);
         });
     }
+
+    @SubscribeMessage('pm2-live')
+    handlePm2Live(@MessageBody() data: { name: string; action: string }, @ConnectedSocket() client: Socket) {
+        const fullCommand = `pm2 ${data.action} ${data.name}`;
+
+        client.emit('cmd-output', `> Executing: ${fullCommand}\n`);
+
+        const child = spawn(fullCommand, { shell: true });
+
+        child.stdout.on('data', (data) => client.emit('cmd-output', data.toString()));
+        child.stderr.on('data', (data) => client.emit('cmd-output', `[PM2 ERROR] ${data.toString()}`));
+
+        child.on('close', (code) => {
+            client.emit('cmd-output', `> PM2 action finished (code ${code})\n`);
+            // Optional: tell the client to refresh the process list data via another socket event
+            this.server.emit('refresh-data');
+        });
+    }
 }

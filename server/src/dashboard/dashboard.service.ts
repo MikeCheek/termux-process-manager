@@ -29,21 +29,31 @@ export class DashboardService {
 
     // --- Port Pinging Logic ---
 
-    async getPortMapping(): Promise<string> {
-        const serviceMap = this.loadServiceMap();
-        const portsToPing = Object.keys(serviceMap).map(Number);
+    async getPortMapping() {
+        const serviceMap = JSON.parse(fs.readFileSync(this.SERVICES_FILE, 'utf-8'));
+        const pm2List = this.getPm2Data();
+        const ip = '192.168.1.39';
 
-        // Run pings in parallel for speed
         const results = await Promise.all(
-            portsToPing.map((port) => this.pingPort(port, serviceMap[port.toString()]))
+            Object.entries(serviceMap).map(async ([port, config]: [string, any]) => {
+                const isOpen = await this.pingPort(Number(port), config.name);
+
+                // Check if associated PM2 process is actually 'online'
+                const pm2Proc = pm2List.find(p => p.name === config.pm2Name);
+                const isPM2Live = pm2Proc?.pm2_env?.status === 'online';
+
+                return {
+                    port,
+                    name: config.name,
+                    pm2Name: config.pm2Name,
+                    icon: config.icon,
+                    isOpen,
+                    isPM2Live,
+                    url: `http://${ip}:${port}`
+                };
+            })
         );
-
-        // Filter out nulls (closed ports) and join
-        const activePorts = results.filter((r) => r !== null);
-
-        return activePorts.length > 0
-            ? activePorts.join('\n')
-            : 'No tracked services are currently online.';
+        return results;
     }
 
     private pingPort(port: number, serviceName: string): Promise<string | null> {
@@ -55,7 +65,7 @@ export class DashboardService {
 
             socket.on('connect', () => {
                 socket.destroy();
-                resolve(`PORT ${port.toString().padEnd(6)} | STATUS: OPEN | SERVICE: ${serviceName}`);
+                resolve(`PORT ${port.toString().padEnd(6)} | SERVICE: ${serviceName}`);
             });
 
             const handleFail = () => {
