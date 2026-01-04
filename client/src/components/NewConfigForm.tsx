@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import SectionWrap from './SectionWrap';
 
-const NewConfigForm: React.FC = () => {
+interface NewConfigFormProps {
+    refreshData: () => void
+}
+
+const NewConfigForm: React.FC<NewConfigFormProps> = ({ refreshData }) => {
     const [formData, setFormData] = useState({ name: '', cmd: '', desc: '' });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -13,9 +17,7 @@ const NewConfigForm: React.FC = () => {
                 body: JSON.stringify(formData),
             });
             if (response.ok) {
-                // To avoid a full page reload, you could call a refresh function 
-                // passed from props, but keeping your original logic for now:
-                window.location.reload();
+                refreshData()
             }
         } catch (err) {
             console.error("Add failed:", err);

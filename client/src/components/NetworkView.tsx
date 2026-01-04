@@ -9,7 +9,7 @@ interface Props {
 const NetworkView: React.FC<Props> = ({ portsInfo }) => {
     if (!portsInfo) {
         return (
-            <SectionWrap header={<span className="text-xs font-bold uppercase">🌐 Network Services</span>}>
+            <SectionWrap header={<span className="text-xs flex-1 min-h-0 font-bold uppercase">🌐 Network Services</span>}>
                 <div className="bg-gh-inner border border-gh-border rounded-md h-64 flex items-center justify-center">
                     <span className="text-gh-dim text-xs animate-pulse">Initializing network scan...</span>
                 </div>
@@ -23,13 +23,13 @@ const NetworkView: React.FC<Props> = ({ portsInfo }) => {
                     <span className="flex items-center gap-2 text-gh-text uppercase tracking-wider text-xs font-bold">
                         🌐 Network Services
                     </span>
-                    <span className="text-[10px] text-gh-dim font-mono">
+                    <span className="text-[10px] text-gh-dim font-mono ml-4">
                         {portsInfo.filter(p => p.isOpen).length} Active
                     </span>
                 </div>
             }
         >
-            <div className="bg-gh-inner border border-gh-border rounded-md h-64 overflow-y-auto custom-scrollbar">
+            <div className="bg-gh-inner border border-gh-border rounded-md flex-1 min-h-0 overflow-y-auto custom-scrollbar">
                 <table className="w-full text-left border-collapse">
                     <thead className="sticky top-0 bg-gh-inner shadow-sm">
                         <tr className="border-b border-gh-border">
@@ -45,14 +45,24 @@ const NetworkView: React.FC<Props> = ({ portsInfo }) => {
                                     <td className="p-2 pl-4">
                                         <div className="flex items-center gap-2">
                                             <span>{item.icon}</span>
-                                            <a
-                                                href={item.url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="text-gh-accent hover:underline truncate max-w-[120px]"
-                                            >
-                                                {item.name}
-                                            </a>
+                                            {
+                                                item.isOpen ?
+                                                    <a
+                                                        href={item.url}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="text-gh-accent hover:underline truncate max-w-[120px]"
+                                                    >
+                                                        {item.name}
+                                                    </a>
+                                                    :
+                                                    <p
+                                                        className="truncate max-w-[120px]"
+                                                    >
+                                                        {item.name}
+                                                    </p>
+                                            }
+
                                         </div>
                                     </td>
                                     <td className="p-2 text-gh-text text-center">

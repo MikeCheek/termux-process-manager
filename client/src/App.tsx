@@ -6,6 +6,7 @@ import SavedConfigs from './components/SavedConfigs';
 import NetworkView from './components/NetworkView';
 import ConsoleView from './components/ConsoleView';
 import { io, Socket } from 'socket.io-client';
+import DashboardFooter from './components/DashboardFooter';
 
 const API_URL = "http://192.168.1.39:9010"
 
@@ -70,7 +71,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     refreshData(true);
-    const timer = setInterval(() => refreshData(), 3000);
+    const timer = setInterval(() => refreshData(), 60000);
     return () => clearInterval(timer);
   }, [refreshData]);
 
@@ -157,7 +158,7 @@ const App: React.FC = () => {
               <span className="text-gh-accent">🔹</span> PM2 Process Manager
             </h3>
             <span className="bg-gh-accent/10 text-gh-accent text-[11px] px-2 py-0.5 rounded-full font-bold">
-              {data.pm2_procs?.length || 0} Active
+              {data.pm2_procs?.length || 0} Processes
             </span>
           </div>
           <PM2Section processes={data.pm2_procs || []} searchQuery={search} socket={socketRef.current} portsInfo={data.ports_info} />
@@ -178,19 +179,10 @@ const App: React.FC = () => {
           <h3 className="text-sm font-semibold flex items-center gap-2 mb-6">
             <span className="text-purple-400 font-bold">+</span> New Configuration
           </h3>
-          <NewConfigForm />
+          <NewConfigForm refreshData={refreshData} />
         </section>
 
-        {/* Sticky Console & Network Section */}
-        <div className="sticky bottom-0 z-30 pt-4 pb-8 bg-gh-bg/95 backdrop-blur-sm border-t border-gh-border">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Console */}
-            <ConsoleView lastOut={lastMessage} />
-
-            {/* Network */}
-            <NetworkView portsInfo={data.ports_info} />
-          </div>
-        </div>
+        <DashboardFooter lastMessage={lastMessage} portsInfo={data.ports_info} />
       </main>
     </div>
   );

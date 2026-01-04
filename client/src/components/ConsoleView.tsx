@@ -20,8 +20,6 @@ const ConsoleView: React.FC<Props> = ({ lastOut }) => {
             const formatted = lastOut.replace(/\n/g, '<br />');
             const html = convert.toHtml(formatted);
             setLogHistory(prev => prev + html);
-
-            setLogHistory((prev) => prev + formatted);
         }
     }, [lastOut]);
 
@@ -49,7 +47,7 @@ const ConsoleView: React.FC<Props> = ({ lastOut }) => {
                         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                         Live Console Output
                     </span>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 ml-4">
                         <button
                             onClick={clearConsole}
                             className="text-[10px] text-gh-dim hover:text-red-400 transition-colors mr-2"
@@ -69,7 +67,7 @@ const ConsoleView: React.FC<Props> = ({ lastOut }) => {
         >
             <pre
                 ref={consoleRef}
-                className="bg-black rounded-md p-4 h-64 overflow-y-auto font-mono text-xs text-green-400 custom-scrollbar scroll-smooth border border-gh-border"
+                className="bg-black rounded-md p-4 flex-1 min-h-0 overflow-y-auto font-mono text-xs text-green-400 custom-scrollbar scroll-smooth border border-gh-border"
             >
                 {/* 3. Use dangerouslySetInnerHTML to render the streamed HTML breaks */}
                 <code
