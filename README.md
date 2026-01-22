@@ -4,8 +4,8 @@ A high-performance, full-stack dashboard built to manage automation scripts and 
 
 ## 🏗️ Architecture
 
-- Backend: NestJS (Node.js framework) - Running on Port 9010
-- Frontend: Vite + Tailwind CSS - Running on Port 5173
+- Backend: NestJS (Node.js framework) - Running on Port 9090
+- Frontend: Vite + Tailwind CSS - Running on Port 5050
 - Orchestration: PM2 (Process Manager 2)
 - Environment: Optimized for Termux / Android
 
@@ -47,8 +47,8 @@ Once the hub is running, use these standard PM2 commands to monitor your system:
 
 By default, the services are mapped as follows:
 
-- Dashboard UI: http://localhost:5173
-- API Gateway: http://localhost:9010
+- Dashboard UI: http://localhost:5050
+- API Gateway: http://localhost:9090
 
 [!TIP] To access this dashboard from another device on the same Wi-Fi, replace localhost with your phone's internal IP (found via 'ip addr show' in Termux).
 
