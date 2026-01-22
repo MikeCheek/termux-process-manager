@@ -3,8 +3,6 @@ import type { DashboardData } from './types';
 import NewConfigForm from './components/NewConfigForm';
 import PM2Section from './components/PM2Section';
 import SavedConfigs from './components/SavedConfigs';
-import NetworkView from './components/NetworkView';
-import ConsoleView from './components/ConsoleView';
 import { io, Socket } from 'socket.io-client';
 import DashboardFooter from './components/DashboardFooter';
 
@@ -171,7 +169,7 @@ const App: React.FC = () => {
               <span className="text-pink-400">📋</span> Saved Configurations
             </h3>
           </div>
-          <SavedConfigs commands={data.commands || {}} searchQuery={search} socket={socketRef.current} />
+          <SavedConfigs commands={data.commands || {}} searchQuery={search} socket={socketRef.current} refreshData={refreshData} />
         </section>
 
         {/* New Configuration */}

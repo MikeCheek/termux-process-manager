@@ -6,9 +6,10 @@ interface Props {
     commands: Record<string, CommandConfig>;
     searchQuery: string;
     socket: Socket | null; // Add your socket instance here
+    refreshData: () => void
 }
 
-const SavedConfigs: React.FC<Props> = ({ commands, searchQuery, socket }) => {
+const SavedConfigs: React.FC<Props> = ({ commands, searchQuery, socket, refreshData }) => {
     const filteredCids = useMemo(() => {
         return Object.keys(commands).filter((cid) => {
             const { name, cmd, desc } = commands[cid];
@@ -51,7 +52,7 @@ const SavedConfigs: React.FC<Props> = ({ commands, searchQuery, socket }) => {
             try {
                 const response = await fetch(endpoint, { method: 'POST' });
                 if (response.ok) {
-                    window.location.reload(); // Reload is fine for deletion
+                    refreshData()
                 }
             } catch (err) {
                 console.error(`Failed to delete:`, err);
@@ -67,36 +68,40 @@ const SavedConfigs: React.FC<Props> = ({ commands, searchQuery, socket }) => {
             {filteredCids.map((cid) => (
                 <div
                     key={cid}
-                    className="flex justify-between items-start py-4 border-b border-gh-border last:border-0 group"
+                    className="flex items-center justify-between py-2 px-3 border-b border-gh-border last:border-0 group hover:bg-gh-inner/30 transition-colors"
                 >
-                    {/* Left: Info */}
-                    <div className="flex flex-col gap-1 min-w-0">
-                        <span className="text-gh-accent font-semibold text-sm hover:underline cursor-pointer">
+                    {/* Left Side: Name + Command + Desc combined */}
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <span className="text-gh-accent font-semibold text-sm whitespace-nowrap">
                             {commands[cid].name}
                         </span>
-                        {commands[cid].desc && (
-                            <p className="text-gh-dim text-xs leading-relaxed truncate">
-                                {commands[cid].desc}
-                            </p>
-                        )}
-                        <code className="mt-1 text-[11px] font-mono text-gh-text bg-gh-inner/50 px-2 py-0.5 rounded border border-gh-border/50 self-start">
+
+                        <code className="hidden sm:block truncate text-[10px] font-mono text-gh-dim bg-gh-inner/50 px-2 py-0.5 rounded border border-gh-border/30 max-w-[300px]">
                             {commands[cid].cmd}
                         </code>
+
+                        {commands[cid].desc && (
+                            <span className="hidden md:block text-gh-dim text-xs truncate italic">
+                                — {commands[cid].desc}
+                            </span>
+                        )}
                     </div>
 
-                    {/* Right: Actions */}
-                    <div className="flex flex-col items-end gap-2 ml-4">
-                        <button
-                            onClick={() => handleAction(cid, 'run')}
-                            className="bg-gh-success/10 text-gh-success border border-gh-success/20 hover:bg-gh-success hover:text-white px-3 py-1 rounded text-xs font-bold transition-all active:scale-95"
-                        >
-                            Run Live
-                        </button>
+                    {/* Right Side: Compact Actions */}
+                    <div className="flex items-center gap-3 ml-4">
+                        {/* Delete only visible on group hover to save brain-power */}
                         <button
                             onClick={() => handleAction(cid, 'delete')}
-                            className="text-gh-dim hover:text-gh-danger text-[10px] uppercase font-bold tracking-wider transition-colors"
+                            className="opacity-0 group-hover:opacity-100 text-gh-dim hover:text-gh-danger text-[10px] uppercase font-bold tracking-wider transition-all"
                         >
                             Delete
+                        </button>
+
+                        <button
+                            onClick={() => handleAction(cid, 'run')}
+                            className="bg-gh-success/10 text-gh-success border border-gh-success/20 hover:bg-gh-success hover:text-white px-4 py-1 rounded-full text-[11px] font-bold transition-all active:scale-95"
+                        >
+                            Run
                         </button>
                     </div>
                 </div>

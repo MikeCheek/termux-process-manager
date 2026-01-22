@@ -11,21 +11,6 @@ export class DashboardService {
     private readonly SERVICES_FILE = '../services.json';
     private readonly logger = new Logger(DashboardService.name);
 
-    // --- Service Mapping Logic ---
-
-    private loadServiceMap(): Record<string, string> {
-        if (!fs.existsSync(this.SERVICES_FILE)) {
-            const defaults = { "3000": "NestJS Backend", "5173": "Vite Frontend" };
-            fs.writeFileSync(this.SERVICES_FILE, JSON.stringify(defaults, null, 4));
-            return defaults;
-        }
-        try {
-            return JSON.parse(fs.readFileSync(this.SERVICES_FILE, 'utf-8'));
-        } catch (e) {
-            this.logger.error(`Error loading services.json: ${e}`);
-            return {};
-        }
-    }
 
     // --- Port Pinging Logic ---
 

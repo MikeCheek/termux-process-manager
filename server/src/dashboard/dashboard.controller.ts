@@ -24,10 +24,23 @@ export class DashboardController {
     @Post('add')
     addCommand(@Body() body: { name: string; cmd: string; desc?: string }) {
         const db = this.dashboardService.loadDb();
-        const cid = body.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-        db[cid] = { name: body.name, cmd: body.cmd, desc: body.desc || '' };
+
+        const baseId = body.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const cid = db[baseId] ? `${baseId}-${Date.now()}` : baseId;
+
+        if (!body.name || !body.cmd) {
+            throw new DOMException('Name and Command are required');
+        }
+
+        db[cid] = {
+            name: body.name,
+            cmd: body.cmd,
+            desc: body.desc || ''
+        };
+
         this.dashboardService.saveDb(db);
-        return { success: true, cid };
+
+        return { success: true, cid, updatedDb: db };
     }
 
     @Post('run/:cid')
