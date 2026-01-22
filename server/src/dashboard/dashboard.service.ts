@@ -22,7 +22,7 @@ export class DashboardService {
         const ip = this.getEnv('HOST_IP', '127.0.0.1');
         const isProd = this.getEnv('NODE_ENV', 'development') === 'production';
 
-        const base_ip = ip.includes(":") ? ip.split(":")[0] : ip
+        const base_ip = ip.replace(/:\d+$/, '');
 
         const results = await Promise.all(
             Object.entries(serviceMap).map(async ([devPort, config]: [string, any]) => {
