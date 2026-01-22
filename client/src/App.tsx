@@ -53,8 +53,6 @@ const App: React.FC = () => {
 
       const json = await res.json();
 
-      console.log(json)
-
       // Basic validation to ensure we have the required fields
       if (json && typeof json === 'object' && 'pm2_procs' in json) {
         setData(json);

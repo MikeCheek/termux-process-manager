@@ -42,7 +42,7 @@ export class DashboardService {
                     icon: config.icon,
                     isOpen,
                     isPM2Live,
-                    url: `http://${base_ip}:${port}`
+                    url: `${base_ip}:${port}`
                 };
             })
         );
