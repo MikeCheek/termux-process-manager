@@ -22,7 +22,9 @@ export class DashboardService {
         const ip = this.getEnv('HOST_IP', '127.0.0.1');
         const isProd = this.getEnv('NODE_ENV', 'development') === 'production';
 
-        const base_ip = ip.replace(/:\d+$/, '');
+        const rawIp = ip.replace(/:\d+$/, '');
+        const formattedInput = rawIp.includes('://') ? rawIp : `http://${rawIp}`;
+        const base_ip = new URL(formattedInput).hostname;
 
         const results = await Promise.all(
             Object.entries(serviceMap).map(async ([devPort, config]: [string, any]) => {
@@ -42,7 +44,7 @@ export class DashboardService {
                     icon: config.icon,
                     isOpen,
                     isPM2Live,
-                    url: `${base_ip}:${port}`
+                    url: `http://${base_ip}:${port}`
                 };
             })
         );
