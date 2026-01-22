@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
+    "dev:prod": "vite --host --mode production",
     "build": "tsc -b && vite build",
+    "serve:prod": "npx serve -s dist -p 5050",
     "lint": "eslint .",
     "preview": "vite preview"
   },

@@ -5,8 +5,10 @@ import PM2Section from './components/PM2Section';
 import SavedConfigs from './components/SavedConfigs';
 import { io, Socket } from 'socket.io-client';
 import DashboardFooter from './components/DashboardFooter';
+import { ConfirmProvider } from './utilities/ConfirmContext';
 
-const API_URL = "http://192.168.1.39:9010"
+const API_URL = import.meta.env.VITE_API_URL;
+
 
 const App: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -50,6 +52,8 @@ const App: React.FC = () => {
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
       const json = await res.json();
+
+      console.log(json)
 
       // Basic validation to ensure we have the required fields
       if (json && typeof json === 'object' && 'pm2_procs' in json) {
@@ -116,73 +120,75 @@ const App: React.FC = () => {
   if (!data) return null;
 
   return (
-    <div className="min-h-screen bg-gh-bg text-gh-text font-sans">
-      {/* Toast Notification */}
-      {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-md shadow-lg border border-white/10 ${toast.type === 'success' ? 'bg-gh-success' : 'bg-gh-danger'
-          } text-white animate-in fade-in slide-in-from-top-2`}>
-          {toast.msg}
-        </div>
-      )}
-
-      {/* Header */}
-      <header className="sticky top-0 z-40 w-full border-b border-gh-border bg-gh-bg/80 backdrop-blur-md px-4 md:px-8 py-4">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
-            <span>🤖</span> CMD Hub
-          </h1>
-          <div className="relative w-full md:w-96 group">
-            <input
-              id="searchInput"
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search commands, ports, or processes..."
-              className="w-full bg-gh-inner border border-gh-border rounded-md px-4 py-1.5 text-sm focus:outline-none focus:border-gh-accent focus:ring-1 focus:ring-gh-accent transition-all"
-            />
-            <kbd className="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono text-gh-dim bg-gh-card border border-gh-border rounded opacity-60 pointer-events-none group-focus-within:hidden">
-              /
-            </kbd>
+    <ConfirmProvider>
+      <div className="min-h-screen bg-gh-bg text-gh-text font-sans">
+        {/* Toast Notification */}
+        {toast && (
+          <div className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-md shadow-lg border border-white/10 ${toast.type === 'success' ? 'bg-gh-success' : 'bg-gh-danger'
+            } text-white animate-in fade-in slide-in-from-top-2`}>
+            {toast.msg}
           </div>
-        </div>
-      </header>
+        )}
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-8 flex flex-col gap-6">
-        {/* PM2 Section */}
-        <section className="bg-gh-card border border-gh-border rounded-md p-6">
-          <div className="flex justify-between items-center mb-6 border-b border-gh-border pb-3">
-            <h3 className="text-sm font-semibold flex items-center gap-2">
-              <span className="text-gh-accent">🔹</span> PM2 Process Manager
+        {/* Header */}
+        <header className="sticky top-0 z-40 w-full border-b border-gh-border bg-gh-bg/80 backdrop-blur-md px-4 md:px-8 py-4">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+              <span>🤖</span> CMD Hub
+            </h1>
+            <div className="relative w-full md:w-96 group">
+              <input
+                id="searchInput"
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search commands, ports, or processes..."
+                className="w-full bg-gh-inner border border-gh-border rounded-md px-4 py-1.5 text-sm focus:outline-none focus:border-gh-accent focus:ring-1 focus:ring-gh-accent transition-all"
+              />
+              <kbd className="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono text-gh-dim bg-gh-card border border-gh-border rounded opacity-60 pointer-events-none group-focus-within:hidden">
+                /
+              </kbd>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="max-w-6xl mx-auto px-4 py-8 flex flex-col gap-6">
+          {/* PM2 Section */}
+          <section className="bg-gh-card border border-gh-border rounded-md p-6">
+            <div className="flex justify-between items-center mb-6 border-b border-gh-border pb-3">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <span className="text-gh-accent">🔹</span> PM2 Process Manager
+              </h3>
+              <span className="bg-gh-accent/10 text-gh-accent text-[11px] px-2 py-0.5 rounded-full font-bold">
+                {data.pm2_procs?.length || 0} Processes
+              </span>
+            </div>
+            <PM2Section processes={data.pm2_procs || []} searchQuery={search} socket={socketRef.current} portsInfo={data.ports_info} />
+          </section>
+
+          {/* Saved Configurations */}
+          <section className="bg-gh-card border border-gh-border rounded-md p-6">
+            <div className="flex justify-between items-center mb-6 border-b border-gh-border pb-3">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <span className="text-pink-400">📋</span> Saved Configurations
+              </h3>
+            </div>
+            <SavedConfigs commands={data.commands || {}} searchQuery={search} socket={socketRef.current} refreshData={refreshData} />
+          </section>
+
+          {/* New Configuration */}
+          <section className="bg-gh-card border border-gh-border rounded-md p-6">
+            <h3 className="text-sm font-semibold flex items-center gap-2 mb-6">
+              <span className="text-purple-400 font-bold">+</span> New Configuration
             </h3>
-            <span className="bg-gh-accent/10 text-gh-accent text-[11px] px-2 py-0.5 rounded-full font-bold">
-              {data.pm2_procs?.length || 0} Processes
-            </span>
-          </div>
-          <PM2Section processes={data.pm2_procs || []} searchQuery={search} socket={socketRef.current} portsInfo={data.ports_info} />
-        </section>
+            <NewConfigForm refreshData={refreshData} />
+          </section>
 
-        {/* Saved Configurations */}
-        <section className="bg-gh-card border border-gh-border rounded-md p-6">
-          <div className="flex justify-between items-center mb-6 border-b border-gh-border pb-3">
-            <h3 className="text-sm font-semibold flex items-center gap-2">
-              <span className="text-pink-400">📋</span> Saved Configurations
-            </h3>
-          </div>
-          <SavedConfigs commands={data.commands || {}} searchQuery={search} socket={socketRef.current} refreshData={refreshData} />
-        </section>
-
-        {/* New Configuration */}
-        <section className="bg-gh-card border border-gh-border rounded-md p-6">
-          <h3 className="text-sm font-semibold flex items-center gap-2 mb-6">
-            <span className="text-purple-400 font-bold">+</span> New Configuration
-          </h3>
-          <NewConfigForm refreshData={refreshData} />
-        </section>
-
-        <DashboardFooter lastMessage={lastMessage} portsInfo={data.ports_info} />
-      </main>
-    </div>
+          <DashboardFooter lastMessage={lastMessage} portsInfo={data.ports_info} />
+        </main>
+      </div>
+    </ConfirmProvider>
   );
 };
 

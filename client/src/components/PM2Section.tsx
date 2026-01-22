@@ -105,10 +105,7 @@ const PM2Section: React.FC<Props> = ({ processes, portsInfo, searchQuery, socket
 
     const handlePM2Action = (name: string, action: 'start' | 'restart' | 'stop') => {
         if (!socket) return;
-        const confirmed = window.confirm(`Are you sure you want to ${action} "${name}"?`);
-        if (confirmed) {
-            socket.emit('pm2-live', { name, action });
-        }
+        socket.emit('pm2-live', { name, action });
     };
 
     if (!portsInfo || !processes || processes.length === 0) {

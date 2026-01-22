@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import SectionWrap from './SectionWrap';
 
 interface NewConfigFormProps {
     refreshData: () => void;

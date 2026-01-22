@@ -11,19 +11,27 @@ export class DashboardService {
     private readonly SERVICES_FILE = '../services.json';
     private readonly logger = new Logger(DashboardService.name);
 
-
+    private getEnv(key: string, defaultValue: string): string {
+        return process.env[key] || defaultValue;
+    }
     // --- Port Pinging Logic ---
 
     async getPortMapping() {
         const serviceMap = JSON.parse(fs.readFileSync(this.SERVICES_FILE, 'utf-8'));
         const pm2List = this.getPm2Data();
-        const ip = '192.168.1.39';
+        const ip = this.getEnv('HOST_IP', '127.0.0.1');
+        const isProd = this.getEnv('NODE_ENV', 'development') === 'production';
+
+        const base_ip = ip.includes(":") ? ip.split(":")[0] : ip
 
         const results = await Promise.all(
-            Object.entries(serviceMap).map(async ([port, config]: [string, any]) => {
-                const isOpen = await this.pingPort(Number(port), config.name);
+            Object.entries(serviceMap).map(async ([devPort, config]: [string, any]) => {
+                // If in prod, prioritize 'prodPort' from JSON, otherwise fallback to devPort
+                const port = isProd && config.prodPort ? config.prodPort : devPort;
 
-                // Check if associated PM2 process is actually 'online'
+                const pingResult = await this.pingPort(Number(port), base_ip);
+                const isOpen = pingResult !== null;
+
                 const pm2Proc = pm2List.find(p => p.name === config.pm2Name);
                 const isPM2Live = pm2Proc?.pm2_env?.status === 'online';
 
@@ -34,23 +42,23 @@ export class DashboardService {
                     icon: config.icon,
                     isOpen,
                     isPM2Live,
-                    url: `http://${ip}:${port}`
+                    url: `http://${base_ip}:${port}`
                 };
             })
         );
         return results;
     }
 
-    private pingPort(port: number, serviceName: string): Promise<string | null> {
+    private pingPort(port: number, host: string): Promise<string | null> {
         return new Promise((resolve) => {
             const socket = new net.Socket();
-
-            // 150ms is the sweet spot for local socket pings
-            socket.setTimeout(150);
+            // Use prod env check for timeout
+            const isProd = process.env.NODE_ENV === 'production';
+            socket.setTimeout(isProd ? 300 : 150);
 
             socket.on('connect', () => {
                 socket.destroy();
-                resolve(`PORT ${port.toString().padEnd(6)} | SERVICE: ${serviceName}`);
+                resolve('OPEN');
             });
 
             const handleFail = () => {
@@ -60,8 +68,7 @@ export class DashboardService {
 
             socket.on('timeout', handleFail);
             socket.on('error', handleFail);
-
-            socket.connect(port, '192.168.1.39');
+            socket.connect(port, host);
         });
     }
 

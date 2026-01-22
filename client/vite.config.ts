@@ -1,17 +1,20 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-// https://vite.dev/config/
-export default defineConfig({
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:9010', // Must match main.ts
-        changeOrigin: true,
-        secure: false,
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd());
+
+  return {
+    server: {
+      proxy: {
+        '/api': {
+          target: env.VITE_API_URL || 'http://127.0.0.1:9010',
+          changeOrigin: true,
+          secure: false,
+        },
       },
     },
-  },
-  plugins: [react(), tailwindcss()]
+    plugins: [react(), tailwindcss()]
+  }
 })

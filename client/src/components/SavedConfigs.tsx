@@ -1,15 +1,18 @@
 import React, { useMemo } from 'react';
 import type { CommandConfig } from '../types';
 import type { Socket } from 'socket.io-client';
+import { useConfirm } from '../utilities/ConfirmContext';
 
 interface Props {
     commands: Record<string, CommandConfig>;
     searchQuery: string;
-    socket: Socket | null; // Add your socket instance here
-    refreshData: () => void
+    socket: Socket | null;
+    refreshData: () => void;
 }
 
 const SavedConfigs: React.FC<Props> = ({ commands, searchQuery, socket, refreshData }) => {
+    const { askConfirmation } = useConfirm(); // 2. Initialize the hook
+
     const filteredCids = useMemo(() => {
         return Object.keys(commands).filter((cid) => {
             const { name, cmd, desc } = commands[cid];
@@ -22,42 +25,48 @@ const SavedConfigs: React.FC<Props> = ({ commands, searchQuery, socket, refreshD
         });
     }, [commands, searchQuery]);
 
-    // const handleActionOld = async (cid: string, action: 'run' | 'delete') => {
-    //     const endpoint = `/api/${action}/${cid}`;
-    //     try {
-    //         const response = await fetch(endpoint, { method: 'POST' });
-    //         if (response.ok) {
-    //             window.location.reload();
-    //         }
-    //     } catch (err) {
-    //         console.error(`Failed to ${action}:`, err);
-    //     }
-    // };
-
     const handleAction = async (cid: string, action: 'run' | 'delete') => {
         if (!socket) {
-            console.error("No socket available")
-            return
+            console.error("No socket available");
+            return;
         }
-        if (action === 'run') {
-            // LIVE STREAMING ACTION
-            // Trigger the socket event we created in NestJS TerminalGateway
-            socket.emit('run-live', { cid });
 
-            // Do NOT reload the page! 
-            // The output will start appearing in your ConsoleView automatically.
+        if (action === 'run') {
+            socket.emit('run-live', { cid });
         } else {
-            // STANDARD API ACTION (Delete)
             const endpoint = `/api/${action}/${cid}`;
             try {
                 const response = await fetch(endpoint, { method: 'POST' });
                 if (response.ok) {
-                    refreshData()
+                    refreshData();
                 }
             } catch (err) {
                 console.error(`Failed to delete:`, err);
             }
         }
+    };
+
+    // 3. Wrapper for the Delete Confirmation
+    const confirmDelete = (cid: string) => {
+        const commandName = commands[cid]?.name || cid;
+
+        askConfirmation({
+            title: "Delete Configuration",
+            message: `Are you sure you want to delete "${commandName}"? This action is permanent and cannot be undone.`,
+            confirmText: "Delete Command",
+            variant: "danger",
+            onConfirm: () => handleAction(cid, 'delete'),
+        });
+    };
+
+    const confirmRun = (cid: string) => {
+        askConfirmation({
+            title: "Execute Command",
+            message: `Are you sure you want to run: "${commands[cid].cmd}"?`,
+            confirmText: "Run Now",
+            variant: "accent", // Blue/Purple theme for execution
+            onConfirm: () => handleAction(cid, 'run'),
+        });
     };
 
     return (
@@ -70,7 +79,7 @@ const SavedConfigs: React.FC<Props> = ({ commands, searchQuery, socket, refreshD
                     key={cid}
                     className="flex items-center justify-between py-2 px-3 border-b border-gh-border last:border-0 group hover:bg-gh-inner/30 transition-colors"
                 >
-                    {/* Left Side: Name + Command + Desc combined */}
+                    {/* Left Side: Info */}
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                         <span className="text-gh-accent font-semibold text-sm whitespace-nowrap">
                             {commands[cid].name}
@@ -87,18 +96,17 @@ const SavedConfigs: React.FC<Props> = ({ commands, searchQuery, socket, refreshD
                         )}
                     </div>
 
-                    {/* Right Side: Compact Actions */}
+                    {/* Right Side: Actions */}
                     <div className="flex items-center gap-3 ml-4">
-                        {/* Delete only visible on group hover to save brain-power */}
                         <button
-                            onClick={() => handleAction(cid, 'delete')}
+                            onClick={() => confirmDelete(cid)}
                             className="opacity-0 group-hover:opacity-100 text-gh-dim hover:text-gh-danger text-[10px] uppercase font-bold tracking-wider transition-all"
                         >
                             Delete
                         </button>
 
                         <button
-                            onClick={() => handleAction(cid, 'run')}
+                            onClick={() => confirmRun(cid)}
                             className="bg-gh-success/10 text-gh-success border border-gh-success/20 hover:bg-gh-success hover:text-white px-4 py-1 rounded-full text-[11px] font-bold transition-all active:scale-95"
                         >
                             Run

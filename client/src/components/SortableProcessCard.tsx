@@ -2,6 +2,7 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { PM2Process } from '../types';
+import { useConfirm } from '../utilities/ConfirmContext';
 
 interface SortableCardProps {
     proc: PM2Process;
@@ -27,12 +28,30 @@ const SortableProcessCard: React.FC<SortableCardProps> = ({
         isDragging
     } = useSortable({ id: proc.name });
 
+    const { askConfirmation } = useConfirm();
+
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
         zIndex: isDragging ? 50 : 'auto',
         opacity: isDragging ? 0.6 : 1,
         scale: isDragging ? '1.02' : '1',
+    };
+
+    const handleActionWithConfirm = (action: 'start' | 'restart' | 'stop') => {
+        const actionLabels = {
+            start: { title: 'Start Process', variant: 'accent' as const },
+            stop: { title: 'Stop Process', variant: 'danger' as const },
+            restart: { title: 'Restart Process', variant: 'accent' as const },
+        };
+
+        askConfirmation({
+            title: actionLabels[action].title,
+            message: `Are you sure you want to ${action} "${proc.name}"?`,
+            confirmText: action.toUpperCase(),
+            variant: actionLabels[action].variant,
+            onConfirm: () => handleAction(proc.name, action),
+        });
     };
 
     return (
@@ -58,7 +77,7 @@ const SortableProcessCard: React.FC<SortableCardProps> = ({
                         onPointerDown={(e) => e.stopPropagation()} // Crucial: Prevents drag when clicking
                         onClick={(e) => {
                             e.stopPropagation();
-                            handleAction(proc.name, 'restart');
+                            handleActionWithConfirm('restart');
                         }}
                         className="w-7 h-7 flex items-center justify-center rounded border border-gh-border bg-gh-card text-xs hover:border-gh-accent hover:text-gh-accent transition-colors cursor-pointer"
                         title="Restart"
@@ -69,7 +88,7 @@ const SortableProcessCard: React.FC<SortableCardProps> = ({
                         onPointerDown={(e) => e.stopPropagation()}
                         onClick={(e) => {
                             e.stopPropagation();
-                            handleAction(proc.name, isOnline ? 'stop' : 'start');
+                            handleActionWithConfirm(isOnline ? 'stop' : 'start');
                         }}
                         className={`w-7 h-7 flex items-center justify-center rounded border border-gh-border bg-gh-card text-xs transition-colors cursor-pointer ${isOnline ? 'hover:border-gh-danger hover:text-gh-danger' : 'hover:border-gh-success hover:text-gh-success'
                             }`}

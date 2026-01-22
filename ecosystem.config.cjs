@@ -8,7 +8,7 @@ module.exports = {
             args: 'run start:prod', // Runs: node dist/main
             env: {
                 NODE_ENV: 'production',
-                PORT: 9010 // Ensure this matches your NestJS config
+                PORT: 9090 // Ensure this matches your NestJS config
             },
             autorestart: true,
             watch: false,
@@ -23,7 +23,7 @@ module.exports = {
             script: 'serve',
             env: {
                 PM2_SERVE_PATH: './dist',
-                PM2_SERVE_PORT: 5173,
+                PM2_SERVE_PORT: 5050,
                 PM2_SERVE_SPA: 'true', // Essential for React routing
                 NODE_ENV: 'production'
             }

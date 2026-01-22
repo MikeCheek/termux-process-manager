@@ -1,2 +1,4 @@
 commands_db.json
 services.json
+client/.env
+server/.env
